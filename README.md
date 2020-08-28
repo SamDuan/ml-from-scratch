@@ -1,2 +1,4 @@
 # ml-from-scratch
-Implement machine learning algorithms from scratch, aiming to understand the underlying theory and methods
+
+## About
+This repo is a collection of machine learning algorithms implementation from scratch, aiming to understand the underlying theory and methods
