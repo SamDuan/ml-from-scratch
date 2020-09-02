@@ -162,10 +162,6 @@ if __name__ == '__main__':
     method = 'kmedoids'
     print("size of the testing test: {}, k: {}, method: {}".format(B.size, k, method))
 
-    # start_time = time.time()
-    # _, _ = clustering(B, k, method='kmeans')
-    # print("--- %s seconds ---" % (time.time() - start_time))
-
     start_time = time.time()
     _, _ = clustering(B, k, method=method)
     print("--- %s seconds ---" % (time.time() - start_time))
