@@ -1,9 +1,7 @@
 # ML under the hood
 
 ## About
-This repo is a collection of machine learning algorithms implementation from scratch, 
-aiming to understand the theory and methods under the hood and connect them with what
-you learn from the textbook.
+This repo is a collection of machine learning algorithms implementation from scratch using Python, Scala and C++, aiming to understand the theory and methods under the hood, connect them with the textbook, and compare the performance across platforms.
 
 ## Table of Contents
 
