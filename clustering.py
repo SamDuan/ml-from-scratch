@@ -4,14 +4,20 @@ import time
 
 def init_centers(x, k):
     """
-    Randomly samples k observations from X as centers.
-    Returns these centers as a (k x d) numpy array.
+    Randomly samples k observations from X as centers
+
+    :return: centers as a (k x d) numpy array
     """
     samples = np.random.choice(len(x), size=k, replace=False)
     return x[samples, :]
 
 
 def compute_d2(x, centers):
+    """
+    Compute the distance (l2 norm squared) between x (m x d) and centers (k x d)
+
+    :return s: the distance matrix as a (m x k) numpy array
+    """
     m = len(x)
     k = len(centers)
     s = np.empty((m, k))
@@ -27,8 +33,11 @@ def compute_d2(x, centers):
 
 
 def compute_distances_no_loops(x, centers):
-    # X: mxd
-    # centers: kxd
+    """
+    An optimized approach to compute the distance (l2 norm squared) between x (m x d) and centers (k x d)
+
+    :return dists: the distance matrix as a (m x k) numpy array
+    """
     if centers.ndim == 1:
         centers = centers.reshape(len(centers), 1)
         dists = -2 * np.dot(x, centers) + np.sum(centers ** 2) + np.sum(x**2, axis=1)[:, np.newaxis]
@@ -38,12 +47,21 @@ def compute_distances_no_loops(x, centers):
 
 
 def assign_cluster_labels(s):
+    """
+    Create cluster labels for cluster assignments based on distance matrix S
+    """
     return np.argmin(s, axis=1)
 
 
 def update_centers(x, labels, k, old_centers, method='kmeans'):
-    # X[:m, :d] == m points, each of dimension d
-    # label[:m] == cluster labels
+    """
+    Search for the new centers for each cluster to minimize the within cluster distance
+
+    :param X: m points, each of dimension d
+    :param labels: m cluster labels
+    :return the new centers for each cluster as a (k x d) array
+    """
+
     m, d = x.shape
     assert m == len(labels)
     assert (min(labels) >= 0)
@@ -65,21 +83,32 @@ def update_centers(x, labels, k, old_centers, method='kmeans'):
             new_wcss = np.amin(np.sum(s_all, axis=1))
             if old_wcss > new_wcss:
                 centers[j] = clusters[np.argmin(np.sum(s_all, axis=1)), :].copy()
-
         return centers
     else:
         raise Exception('Input is invalid')
 
 
 def wcss(s):
+    """
+    Compute within cluster sum of squares of distance
+    """
     return np.sum(np.amin(s, axis=1))
 
 
 def has_converged(old_centers, centers):
+    """
+    Determine whether the algorithm is converged
+    by checking if the old_centers and centers have become identical
+    """
     return set([tuple(x) for x in old_centers]) == set([tuple(x) for x in centers])
 
 
 def clustering(x, k, starting_centers=None, max_steps=np.inf, method='kmeans'):
+    """
+    Implement the clustering algorithm, consisting of:
+    (1) assigning each data point to a cluster
+    (2) updating cluster center in each cluster
+    """
     if starting_centers is None:
         centers = init_centers(x, k)
     elif starting_centers.size > 0 and method == 'kmeans':
@@ -90,96 +119,32 @@ def clustering(x, k, starting_centers=None, max_steps=np.inf, method='kmeans'):
     converged = False
     labels = np.zeros(len(x))
     i = 1
+    log = []
     while (not converged) and (i <= max_steps):
         old_centers = centers.copy()
         s = compute_distances_no_loops(x, old_centers)  # calculate the distance between X and each center
         labels = assign_cluster_labels(s)  # assign the label based on min distance to each center
         centers = update_centers(x, labels, k, method=method, old_centers=old_centers)
-        print("iteration", i, "WCSS = ", wcss(s))  # within-cluster-sum-of-squares
+        wcss_i = wcss(s)
+        print("iteration", i, "WCSS = ", wcss_i)  # within-cluster-sum-of-squares
+        log.append((i, wcss_i))
         if has_converged(old_centers, centers):
             converged = True
         i += 1
-    return labels, centers
-
-
-def mark_matches(a, b, exact=False):
-    """
-    Given two Numpy arrays of {0, 1} labels, returns a new boolean
-    array indicating at which locations the input arrays have the
-    same label (i.e., the corresponding entry is True).
-
-    This function can consider "inexact" matches. That is, if `exact`
-    is False, then the function will assume the {0, 1} labels may be
-    regarded as the same up to a swapping of the labels. This feature
-    allows
-
-      a == [0, 0, 1, 1, 0, 1, 1]
-      b == [1, 1, 0, 0, 1, 0, 0]
-
-    to be regarded as equal. (That is, use `exact=False` when you
-    only care about "relative" labeling.)
-    """
-    assert a.shape == b.shape
-    a_int = a.astype(dtype=int)
-    b_int = b.astype(dtype=int)
-    assert ((a_int == 0) | (a_int == 1) | (a_int == 2)).all()
-    assert ((b_int == 0) | (b_int == 1) | (b_int == 2)).all()
-
-    exact_matches = (a_int == b_int)
-    if exact:
-        return exact_matches
-
-    assert exact == False
-    num_exact_matches = np.sum(exact_matches)
-    if (2 * num_exact_matches) >= np.prod(a.shape):
-        return exact_matches
-    return exact_matches == False  # Invert
-
-
-def count_matches(a, b, exact=False):
-    """
-    Given two sets of {0, 1} labels, returns the number of mismatches.
-
-    This function can consider "inexact" matches. That is, if `exact`
-    is False, then the function will assume the {0, 1} labels may be
-    regarded as similar up to a swapping of the labels. This feature
-    allows
-
-      a == [0, 0, 1, 1, 0, 1, 1]
-      b == [1, 1, 0, 0, 1, 0, 0]
-
-    to be regarded as equal. (That is, use `exact=False` when you
-    only care about "relative" labeling.)
-    """
-    matches = mark_matches(a, b, exact=exact)
-    return np.sum(matches)
+    return labels, centers, log
 
 
 if __name__ == '__main__':
+    # create a test dataset
+    B = np.random.random_sample(size=(10000, 2))
 
-    B = np.random.random_sample(size=(100000, 2))
+    # set up the parameters for the run
     k = 10
     method = 'kmedoids'
     print("size of the testing test: {}, k: {}, method: {}".format(B.size, k, method))
 
+    # kick off the clustering
     start_time = time.time()
-    _, _ = clustering(B, k, method=method)
+    _, _, iteration_log = clustering(B, k, method=method)
     print("--- %s seconds ---" % (time.time() - start_time))
-
-    # ### Test start ###
-    # from sklearn import datasets
-    # from sklearn.decomposition import PCA
-    # iris = datasets.load_iris()
-    # X_reduced = PCA(n_components=3).fit_transform(iris.data)
-    # labels = iris.target
-    # mylabels, centers = clustering(X_reduced, 3, method='kmedoids')
-    # n_matches = count_matches(labels, mylabels)
-    # print(n_matches,
-    #       "matches out of",
-    #       len(X_reduced), "data points",
-    #       "(~ {:.1f}%)".format(100.0 * n_matches / len(labels)))
-    # ### Test end ###
-
-# ref1: https://github.com/briverse17/supernaive-kmedoids/blob/master/SuperNaive_kmedoids.ipynb
-# ref2: https://towardsdatascience.com/k-medoids-clustering-on-iris-data-set-1931bf781e05
-# ref3: https://www.youtube.com/watch?v=GApaAnGx3Fw
+    print(iteration_log)
