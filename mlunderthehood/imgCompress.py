@@ -1,7 +1,7 @@
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
-from clustering import clustering
+from mlunderthehood.clustering import clustering
 import time
 
 # set up the parameters prior to running the program
