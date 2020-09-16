@@ -1,4 +1,4 @@
-# ML under the hood
+# ML from scratch
 
 ## About
 This repo is a collection of machine learning algorithms implementation from scratch using Python, Scala and C++.
