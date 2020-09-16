@@ -1,7 +1,11 @@
 # ML from scratch
 
 ## About
-This repo is a collection of machine learning algorithms implementation from scratch using Python, Scala and C++.
+Building machine learning algorithms from scratch using Python, Scala and C++.
+
+# Why this matters?
+1. Developing the ability to tranlate math into code.
+2. Taking your understanding of the algorithims to the next level.
 
 ## Table of Contents
 
