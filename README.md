@@ -3,9 +3,10 @@
 ## About
 Building machine learning algorithms from scratch using Python, Scala and C++.
 
-# Why this matters?
+## Why this matters?
 1. Developing the ability to tranlate math into code.
 2. Taking your understanding of the algorithims to the next level.
+3. Scikit-learn is no longer a black box now. I understand how it actually works.
 
 ## Table of Contents
 
